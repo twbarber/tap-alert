@@ -36,13 +36,11 @@ def get_html():
         return load_test_html()
 
 
-print(str(sys.argv))
 contents = get_html()
 soup = BeautifulSoup(contents, 'html.parser')
 menu = soup.findAll("div", {"class": "beer-details"})
 
 for item in menu:
-    '''print(str(item))'''
     item_soup = BeautifulSoup(str(item), 'html.parser')
     a_beer = item_soup.find(attrs={"data-href": ":beer"})
     a_brewery = item_soup.find(attrs={"data-href": ":brewery"})

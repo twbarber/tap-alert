@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='dtct-beer-alert',
+    name='tap-alert',
     version='0.0.1',
     packages=[],
     url='twbarber.com',
