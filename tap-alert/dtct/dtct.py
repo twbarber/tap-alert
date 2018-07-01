@@ -1,46 +1,55 @@
 import re
-import sys
-import urllib.request
 from bs4 import BeautifulSoup
+from common.beer import Beer
+from common import scraping_client
+
+URL = 'https://untappd.com/v/downtown-city-tavern/601787'
 
 
-class AppURLopener(urllib.request.FancyURLopener):
-    version = "Mozilla/5.0"
-
-
-def normalize_beer_name(beer):
+def parse_name(soup):
+    a_beer = soup.find(attrs={"data-href": ":beer"})
     regex = r"(\d.\s)"
-    return re.sub(regex, '', str(beer.contents[0]))
+    return re.sub(regex, '', str(a_beer.contents[0]))
 
 
-def fetch_live_html(url):
-    return AppURLopener().open(url).read()
+def parse_brewery(soup):
+    a_brewery = soup.find(attrs={"data-href": ":brewery"})
+    return str(a_brewery.contents[0])
 
 
-def write_html_to_file(html, file):
-    html_file = open(file, 'w')
-    html_file.write(str(html))
+def parse_style(soup):
+    return str(soup.em.contents[0])
 
 
-def load_test_html(file):
-    html_file = open(file, 'r')
-    return html_file.read()
+def parse_abv(soup):
+    return str(soup.h6.text.split('%')[0] + '%')
 
 
-def get_html():
-    if len(sys.argv) > 1 and sys.argv[1] == 'live':
-        return fetch_live_html('https://untappd.com/v/downtown-city-tavern/601787')
-    else:
-        return load_test_html('dtct.html')
+def get_menu():
+    contents = scraping_client.get_html(URL, True)
+    soup = BeautifulSoup(contents, 'html.parser')
+    menu_html = soup.findAll("div", {"class": "beer-details"})
+
+    menu = []
+
+    for item in menu_html:
+        item_soup = BeautifulSoup(str(item), 'html.parser')
+        beer = Beer(
+            parse_name(item_soup),
+            parse_brewery(item_soup),
+            parse_style(item_soup),
+            parse_abv(item_soup)
+        )
+        menu.append(beer)
+
+    return menu
 
 
-contents = get_html()
-soup = BeautifulSoup(contents, 'html.parser')
-menu = soup.findAll("div", {"class": "beer-details"})
+def menu_as_sms():
+    menu = get_menu()
+    message = 'Downtown City Tavern - Glens Falls, NY\n\n'
 
-for item in menu:
-    item_soup = BeautifulSoup(str(item), 'html.parser')
-    a_beer = item_soup.find(attrs={"data-href": ":beer"})
-    a_brewery = item_soup.find(attrs={"data-href": ":brewery"})
+    for i in menu:
+        message += str(i.sms()) + '\n'
 
-    print(normalize_beer_name(a_beer) + ' - ' + str(item.em.contents[0]) + ' - ' + str(a_brewery.contents[0]) + '\n')
+    return message.strip()
