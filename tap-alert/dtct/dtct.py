@@ -17,14 +17,12 @@ def fetch_live_html(url):
     return AppURLopener().open(url).read()
 
 
-def write_html_to_file(html):
-    file = 'dtct.html'
+def write_html_to_file(html, file):
     html_file = open(file, 'w')
     html_file.write(str(html))
 
 
-def load_test_html():
-    file = 'dtct.html'
+def load_test_html(file):
     html_file = open(file, 'r')
     return html_file.read()
 
@@ -33,7 +31,7 @@ def get_html():
     if len(sys.argv) > 1 and sys.argv[1] == 'live':
         return fetch_live_html('https://untappd.com/v/downtown-city-tavern/601787')
     else:
-        return load_test_html()
+        return load_test_html('dtct.html')
 
 
 contents = get_html()
